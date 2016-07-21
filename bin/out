@@ -1,0 +1,18 @@
+#!/bin/bash
+set -e
+set -o pipefail
+exec 3>&1 # use fd 3 for script output
+exec 1>&2 # send normal stdout to stderr for logging
+
+pushd $1
+
+PACKER_FILE=$PWD/$(jq -r .params.filepath < /tmp/input)
+
+pushd $(dirname $PACKER_FILE)
+
+jq -r '.params.vars' < /tmp/input > packer_vars.json
+
+packer build -var-file=packer_vars.json $PACKER_FILE
+# aws ec2 describe-images --filter Name=name,Values="" --query 'Images[].ImageId' --output text"
+
+echo "{}"
